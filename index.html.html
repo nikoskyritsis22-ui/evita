@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💘 Valentine for Evita</title>
+
+<style>
+  body{
+    margin:0;
+    overflow:hidden;
+    background:linear-gradient(to bottom,#ff9a9e,#fad0c4);
+    height:100vh;
+    font-family:Arial, sans-serif;
+  }
+
+  .card{
+    position:relative;
+    z-index:10;
+    background:#fff;
+    width:min(440px, calc(100vw - 32px));
+    padding:40px 26px;
+    border-radius:25px;
+    text-align:center;
+    margin:auto;
+    top:50%;
+    transform:translateY(-50%);
+    box-shadow:0 10px 30px rgba(0,0,0,0.25);
+  }
+
+  h1{ color:#e63946; margin:0; line-height:1.2; }
+
+  .buttons{
+    position:relative;
+    height:190px;
+    margin-top:40px;
+  }
+
+  #yes{
+    font-size:36px;
+    padding:24px 70px;
+    background:#ff4d6d;
+    color:#fff;
+    border:none;
+    border-radius:18px;
+    cursor:pointer;
+    transition:transform .2s;
+  }
+  #yes:hover{ transform:scale(1.06); }
+
+  #no{
+    position:absolute;
+    font-size:20px;
+    padding:14px 30px;
+    background:#adb5bd;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    left:260px;
+    top:90px;
+  }
+
+  .result{
+    margin-top:26px;
+    font-size:24px;
+    color:#d6336c;
+    font-weight:700;
+    min-height:60px;
+  }
+
+  canvas{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+  }
+
+  /* 💗 Hearts */
+  .heart{
+    position:fixed;
+    top:-10px;
+    font-size:22px;
+    animation:fall linear forwards;
+    color:#ff4d6d;
+    z-index:1;
+    user-select:none;
+  }
+  @keyframes fall{
+    to{ transform:translateY(110vh); opacity:0; }
+  }
+</style>
+</head>
+
+<body>
+
+<canvas id="fireworks"></canvas>
+
+<div class="card">
+  <h1>💖 Εβίτα,<br>θα γίνεις ο Βαλεντίνος μου<br>για φέτος; 💖</h1>
+
+  <div class="buttons">
+    <button id="yes">YES 💘</button>
+    <button id="no">NO 🙈</button>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<!-- 🎵 Local music file (βάλε music.mp3 δίπλα στο valentine.html) -->
+<audio id="music" loop preload="auto">
+  <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  const yesBtn = document.getElementById("yes");
+  const noBtn  = document.getElementById("no");
+  const result = document.getElementById("result");
+  const music  = document.getElementById("music");
+
+  let yesSize = 36;
+  let noSize  = 20;
+  let fireworksOn = false;
+
+  // 😈 NO runs away + NO shrinks + YES grows
+  noBtn.addEventListener("mouseover", () => {
+    const x = Math.random() * 280;  // inside buttons area
+    const y = Math.random() * 130;
+
+    noBtn.style.left = x + "px";
+    noBtn.style.top  = y + "px";
+
+    noSize = Math.max(8, noSize - 2);
+    noBtn.style.fontSize = noSize + "px";
+
+    yesSize += 4;
+    yesBtn.style.fontSize = yesSize + "px";
+  });
+
+  // 💘 YES click
+  yesBtn.addEventListener("click", async () => {
+    result.innerHTML = "💞 Τέλεια Εβίτα 💕<br>Ανυπομονώ για φέτος μαζί σου!";
+
+    // Start music (needs user click = allowed)
+    try {
+      music.currentTime = 0;
+      await music.play();
+    } catch (e) {
+      // If user has blocked autoplay, show a hint
+      result.innerHTML += "<br><small>🔊 Αν δεν ακούς μουσική, πάτα το εικονίδιο ήχου στον browser και δοκίμασε ξανά.</small>";
+    }
+
+    if (!fireworksOn) {
+      fireworksOn = true;
+      startFireworks();
+    }
+  });
+
+  // 💗 falling hearts
+  setInterval(() => {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+    heart.textContent = (Math.random() < 0.5) ? "💗" : "💘";
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.animationDuration = (3 + Math.random() * 3) + "s";
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 6500);
+  }, 320);
+
+  /* 🎆 FIREWORKS */
+  const canvas = document.getElementById("fireworks");
+  const ctx = canvas.getContext("2d");
+
+  function resizeCanvas(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  let particles = [];
+
+  function burst(){
+    const baseX = Math.random() * canvas.width;
+    const baseY = Math.random() * canvas.height * 0.55;
+
+    for (let i = 0; i < 70; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 5;
+      particles.push({
+        x: baseX,
+        y: baseY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        alpha: 1,
+        r: 2 + Math.random() * 2.5
+      });
+    }
+  }
+
+  function startFireworks(){
+    burst();
+    setInterval(burst, 750);
+  }
+
+  function animate(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.03;      // gravity
+      p.alpha -= 0.018;
+
+      ctx.fillStyle = `rgba(255, 77, 109, ${p.alpha})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (p.alpha <= 0) particles.splice(i, 1);
+    }
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+</script>
+
+</body>
+</html>
